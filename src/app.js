@@ -1,6 +1,7 @@
 const express = require('express');
 
 const app = express();// creating express instance or server to listen incoming http requests
+const {adminAuth, UserAuth} = require("./middlewares/auth");
 
 // this app.get will only handle get call to /users meaning it will return some data from dB
 
@@ -8,29 +9,25 @@ const app = express();// creating express instance or server to listen incoming 
 //     res.send("Hahahah I Dominate because im first and i handle all Http methods");
 // })
 
+app.use("/admin",adminAuth);
 
-
-app.use("/users", [(req, res,next)=>{
-    console.log("Handling the route user1!!");
-    next();
-    // res.send("Response");
-    
-},
-(req,res,next)=>{
-    console.log("Handling the route user 2!!");
-    // res.send("2nd response");
-    next();
-}],
-(req,res,next)=>{
-    console.log("Handling the route user 3!!");
-    // res.send("2nd response");
-    next();
-},
-(req,res,next)=>{
-    console.log("Handling the route user 4!!");
-    // res.send("2nd response");
-    res.send("4th Response")
+app.post("/user/login",(req,res)=>{
+    res.send("User logged in successfully");
 }
+)
+
+app.get("/user/data",UserAuth,(req,res)=>{
+    res.send("give data to user");
+} );
+// next();
+
+
+
+app.get("/admin/getAllData", (req, res,next)=>{
+    res.send("Response gotten");
+
+}
+
 
 );
 
