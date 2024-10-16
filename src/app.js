@@ -17,9 +17,7 @@ try{
   res.send("User Added Successfully!");
 }
 catch(err){
-  await user.save();
-  res.send("User Added Successfully!");
-    
+  res.status(400).send("Error saving the user: " + err.message);
 
 }
 });
@@ -76,16 +74,30 @@ app.delete("/user", async(req,res)=>{
     }
 })
 
-app.patch("/user", async(req,res)=>{
-    try {
-        const userEmail = req.body.emailId;
+app.patch("/user/:userId", async(req,res)=>{
+
+    const userId = req.params?.userId;
         const data = req.body
-        await User.findOneAndUpdate({emailId:userEmail},data);
+
+    try {
+
+        const Allowed = ["about","firstName","gender","skills"]
+
+    const isupdateAllowed = Object.keys(data).every((K)=>
+        Allowed.includes(K)
+    );
+
+    if (!isupdateAllowed){
+        throw new Error("Update is not allowed");
+    }
+
+        await User.findByIdAndUpdate(userId,data,{
+        runValidators:true,});
         // console.log(user);
         res.send("Data Updated")
     }
 catch(err){
-       res.status(400).send("Something went wrong");
+       res.status(400).send("something went wrong"+ err.message);
 }
 
 })
