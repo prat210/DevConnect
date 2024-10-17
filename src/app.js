@@ -5,14 +5,41 @@ const app = express();// creating express instance or server to listen incoming 
 
 const User = require("./models/user");
 
+const {ValidateCheck} = require("./utils/validation");
+
+const bcrypt = require('bcrypt');
+
+const validator = require('validator');
+
 app.use(express.json());
 
 
 // add a user to db
 app.post("/signup", async (req, res)=>{
 
-    const user = new User(req.body);
 try{
+   
+    //Validation of data
+    ValidateCheck(req);
+
+    //encrypting password
+    const {firstName,LastName,emailId,Password} = req.body;
+
+    const Encrypted = await bcrypt.hash(Password, 10);
+    console.log(Encrypted);
+    //creating a new instance of User model
+    const user = new User({
+
+        firstName,
+        LastName,
+        emailId,
+        Password: Encrypted,
+
+
+    });
+
+
+
     await user.save();
   res.send("User Added Successfully!");
 }
@@ -21,6 +48,62 @@ catch(err){
 
 }
 });
+
+//login user
+
+app.post("/login", async (req, res) => {
+
+ const {emailId,Password} = req.body
+    
+try{
+
+    if (!validator.isEmail(emailId)){
+        throw new Error("Invalid email");
+    }
+;
+
+const user = await User.findOne({emailId: emailId});
+
+if (!user){
+    throw new Error("Email id not present in our db");
+}
+
+const correctPassword = await bcrypt.compare(Password, user.Password);
+
+if(correctPassword){
+    res.send("Login successfully")
+}
+else{
+    
+    throw new Error("Invalid password");
+}
+
+
+
+
+
+}
+
+catch(err){
+    console.log(err);
+    res.status(400).send("Something went wrong");
+}
+
+
+
+
+})
+
+
+
+
+
+
+
+
+
+
+
 
 //get a single user from db
 app.get("/user", async (req, res)=>{
