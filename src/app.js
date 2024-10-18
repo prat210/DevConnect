@@ -11,7 +11,11 @@ const bcrypt = require('bcrypt');
 
 const validator = require('validator');
 
+const cookieParser = require('cookie-parser');
+
 app.use(express.json());
+
+app.use(cookieParser());
 
 
 // add a user to db
@@ -58,24 +62,29 @@ app.post("/login", async (req, res) => {
 try{
 
     if (!validator.isEmail(emailId)){
-        throw new Error("Invalid email");
+        throw new Error("Invalid credentials");
     }
 ;
 
 const user = await User.findOne({emailId: emailId});
 
 if (!user){
-    throw new Error("Email id not present in our db");
+    throw new Error("Invalid credentials");
 }
 
 const correctPassword = await bcrypt.compare(Password, user.Password);
 
 if(correctPassword){
+
+    //Create a JWT token
+
+   //add the token to the cookie and send the response back to the user
+    res.cookie("token","ramvwbfwdddj")
     res.send("Login successfully")
 }
 else{
     
-    throw new Error("Invalid password");
+    throw new Error("Invalid credentials");
 }
 
 
@@ -86,7 +95,7 @@ else{
 
 catch(err){
     console.log(err);
-    res.status(400).send("Something went wrong");
+    res.status(400).send("Something went wrong :" + err.message);
 }
 
 
@@ -94,16 +103,14 @@ catch(err){
 
 })
 
+app.get("/profile", async(req,res)  =>{
 
+    const cookies = req.cookies;
 
+    console.log(cookies);
 
-
-
-
-
-
-
-
+    res.send("reading cookies");
+})
 
 //get a single user from db
 app.get("/user", async (req, res)=>{
