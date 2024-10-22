@@ -3,194 +3,29 @@ const express = require('express');
 const connectDb = require("./config/database");
 const app = express();// creating express instance or server to listen incoming http requests
 
-const User = require("./models/user");
 
-const {ValidateCheck} = require("./utils/validation");
-
-const bcrypt = require('bcrypt');
-
-const validator = require('validator');
 
 const cookieParser = require('cookie-parser');
+
+const User = require("./models/user");
+
 
 app.use(express.json());
 
 app.use(cookieParser());
 
 
-// add a user to db
-app.post("/signup", async (req, res)=>{
+const authRouter = require("./Routes/auth")
 
-try{
-   
-    //Validation of data
-    ValidateCheck(req);
+const profileRouter = require("./Routes/profile")
 
-    //encrypting password
-    const {firstName,LastName,emailId,Password} = req.body;
-
-    const Encrypted = await bcrypt.hash(Password, 10);
-    console.log(Encrypted);
-    //creating a new instance of User model
-    const user = new User({
-
-        firstName,
-        LastName,
-        emailId,
-        Password: Encrypted,
+const requestRouter = require("./Routes/requests")
 
 
-    });
+app.use("/", authRouter);
+app.use("/",profileRouter);
+app.use("/",requestRouter);
 
-
-
-    await user.save();
-  res.send("User Added Successfully!");
-}
-catch(err){
-  res.status(400).send("Error saving the user: " + err.message);
-
-}
-});
-
-//login user
-
-app.post("/login", async (req, res) => {
-
- const {emailId,Password} = req.body
-    
-try{
-
-    if (!validator.isEmail(emailId)){
-        throw new Error("Invalid credentials");
-    }
-;
-
-const user = await User.findOne({emailId: emailId});
-
-if (!user){
-    throw new Error("Invalid credentials");
-}
-
-const correctPassword = await bcrypt.compare(Password, user.Password);
-
-if(correctPassword){
-
-    //Create a JWT token
-
-   //add the token to the cookie and send the response back to the user
-    res.cookie("token","ramvwbfwdddj")
-    res.send("Login successfully")
-}
-else{
-    
-    throw new Error("Invalid credentials");
-}
-
-
-
-
-
-}
-
-catch(err){
-    console.log(err);
-    res.status(400).send("Something went wrong :" + err.message);
-}
-
-
-
-
-})
-
-app.get("/profile", async(req,res)  =>{
-
-    const cookies = req.cookies;
-
-    console.log(cookies);
-
-    res.send("reading cookies");
-})
-
-//get a single user from db
-app.get("/user", async (req, res)=>{
-    
-    const userEmail = req.body.emailId;
-
-    try{
-
-        const user = await User.findOne({ emailId: userEmail });
-        if (!user){
-            res.status(404).send("User Not Found");
-        }
-        res.send(user);
-
-    }
-    catch(err){
-        res.status(400).send("Something went wrong");
-    }
-}
-)
-
-//get all users from db
-app.get("/feed", async (req,res)=>{
-    try{
-
-        const user = await User.find({});
-        if (user.length===0){
-            res.status(404).send("User Not Found");
-        }
-        res.send(user);
-
-    }
-    catch(err){
-        res.status(400).send("Something went wrong");
-    }
-})
-
-//delete a user from db
-app.delete("/user", async(req,res)=>{
-    const userId = req.body.userId;
-
-    try{
-     
-        const user = await User.findByIdAndDelete(userId);
-
-        res.send("User Deleted")
-    }
-    catch(err){
-        res.status(400).send("Something went wrong");
-
-    }
-})
-
-app.patch("/user/:userId", async(req,res)=>{
-
-    const userId = req.params?.userId;
-        const data = req.body
-
-    try {
-
-        const Allowed = ["about","firstName","gender","skills"]
-
-    const isupdateAllowed = Object.keys(data).every((K)=>
-        Allowed.includes(K)
-    );
-
-    if (!isupdateAllowed){
-        throw new Error("Update is not allowed");
-    }
-
-        await User.findByIdAndUpdate(userId,data,{
-        runValidators:true,});
-        // console.log(user);
-        res.send("Data Updated")
-    }
-catch(err){
-       res.status(400).send("something went wrong"+ err.message);
-}
-
-})
 
 connectDb()
 .then(()=>{
