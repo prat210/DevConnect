@@ -16,4 +16,30 @@ throw new Error("Please Enter Strong Password");
 }}
 
 
-module.exports = {ValidateCheck};
+const ValidateProfile = (req) =>{
+
+
+    const AllowedEdit = [
+
+
+        "firstName",
+        "LastName",
+        "age",
+        "gender",
+        "skills",
+        "photoUrl",
+        "about"
+
+    ];
+
+    const isAllowed = Object.keys(req.body).every((field)=>
+        AllowedEdit.includes(field)
+    )
+   
+    return isAllowed;
+    
+
+}
+
+
+module.exports = {ValidateCheck, ValidateProfile};

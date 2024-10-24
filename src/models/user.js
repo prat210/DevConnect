@@ -22,6 +22,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         lowercase: true,
         required: true,
+        unique: true,
+        //index: true
         validate(value){
          if(!validator.isEmail(value)){
             throw new Error("Email invalid");
@@ -31,7 +33,6 @@ const userSchema = new mongoose.Schema({
     Password: {
         type: String,
         required: true,
-        unique: true,
         validate(value){
             if(!validator.isStrongPassword(value)){
                 throw new Error("Enter a Strong password");
@@ -44,11 +45,16 @@ const userSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        validate(value){
-        if (!['male', 'female','others'].includes(value)){
-            throw new Error("Gender Data is not valid");
+        enum : {
+            values:["male","female","other"],
+            message: `{VALUE} is not a valid gender`,
+
         }
-        }
+        // validate(value){
+        // if (!['male', 'female','others'].includes(value)){
+        //     throw new Error("Gender Data is not valid");
+        // }
+
     },
     photUrl:{
         type: String
